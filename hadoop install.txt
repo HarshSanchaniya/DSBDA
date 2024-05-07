@@ -1,0 +1,135 @@
+sudo apt-get install default-jdk
+
+sudo apt install openjdk-8-jdk
+
+sudo update-alternatives --config java
+
+sudo addgroup hadoop
+
+sudo adduser --ingroup hadoop hduser
+
+sudo adduser hduser sudo
+
+sudo apt-get install openssh-server
+
+which ssh
+which sshd
+
+su hduser
+cd
+ssh-keygen -t rsa -P ""
+cat $HOME/.ssh/id_rsa.pub >> $HOME/.ssh/authorized_keys
+ssh localhost
+exit
+
+wget https://archive.apache.org/dist/hadoop/common/hadoop-2.9.0/hadoop-2.9.0.tar.gz
+tar -xvf hadoop-2.9.0.tar.gz
+
+sudo mv hadoop-2.9.0 /usr/local/hadoop
+
+sudo chown -R hduser /usr/local/
+
+sudo nano ~/.bashrc
+[[[[
+#HADOOP VARIABLES START
+export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+export HADOOP_HOME=/usr/local/hadoop
+export PATH=$PATH:$HADOOP_HOME/bin
+export PATH=$PATH:$HADOOP_HOME/sbin
+export HADOOP_MAPRED_HOME=$HADOOP_HOME
+export HADOOP_COMMON_HOME=$HADOOP_HOME
+export HADOOP_HDFS_HOME=$HADOOP_HOME
+export YARN_HOME=$HADOOP_HOME
+export HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_HOME/lib/native
+export HADOOP_OPTS="-Djava.library.path=$HADOOP_HOME/lib"
+#HADOOP VARIABLES END
+]]]]
+source ~/.bashrc
+
+sudo nano /usr/local/hadoop/etc/hadoop/hadoop-env.sh
+[[[[
+export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+]]]]
+
+sudo nano /usr/local/hadoop/etc/hadoop/core-site.xml
+[[[[
+<property>
+<name>fs.default.name</name>
+<value>hdfs://localhost:9000</value>
+</property>
+]]]]
+
+cp /usr/local/hadoop/etc/hadoop/mapred-site.xml.template /usr/local/hadoop/etc/hadoop/mapred-site.xml
+
+sudo nano /usr/local/hadoop/etc/hadoop/mapred-site.xml
+[[[[
+<property>
+<name>mapreduce.framework.name</name>
+<value>yarn</value>
+</property>
+]]]]
+
+sudo mkdir -p /usr/local/hadoop_tmp/hdfs/namenode
+sudo mkdir -p /usr/local/hadoop_tmp/hdfs/datanode
+sudo chown -R hduser:hadoop /usr/local/hadoop_tmp
+
+sudo nano /usr/local/hadoop/etc/hadoop/hdfs-site.xml
+[[[[
+<property>
+<name>dfs.replication</name>
+<value>1</value>
+</property>
+<property>
+<name>dfs.namenode.name.dir</name>
+<value>file:/usr/local/hadoop_tmp/hdfs/namenode</value>
+</property>
+<property>
+<name>dfs.datanode.data.dir</name>
+<value>file:/usr/local/hadoop_tmp/hdfs/datanode</value>
+</property>
+]]]]
+
+sudo nano /usr/local/hadoop/etc/hadoop/yarn-site.xml
+[[[[
+<property>
+<name>yarn.nodemanager.aux-services</name>
+<value>mapreduce_shuffle</value>
+</property>
+<property>
+<name>yarn.nodemanager.aux-
+services.mapreduce.shuffle.class</name>
+<value>org.apache.hadoop.mapred.ShuffleHandler</value>
+</property>
+]]]]
+
+hadoop namenode -format			!!!!!
+
+start-all.sh (cd /usr/local/hadoop/sbin)
+jps
+
+can access the dashboard on 50070 port of localhost
+stop-all.sh
+
+
+
+
+
+
+
+
+
+
+TO REMOVE HADOOP:
+
+
+sudo rm -rf /usr/local/hadoop
+sudo rm -rf ~/.bashrc
+sudo deluser hduser
+sudo delgroup hadoop
+sudo apt-get remove openssh-server
+sudo apt-get remove default-jdk openjdk-8-jdk
+rm -rf ~/.ssh
+sudo rm -rf /usr/local/hadoop_tmp
+
+
+
